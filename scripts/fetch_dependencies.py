@@ -4,7 +4,6 @@ Andrew Scott - Ochrona Security
 '''
 import os
 import re
-from time import sleep
 
 import requests
 
@@ -29,21 +28,21 @@ def fetch_file(url):
     try:
         resp = requests.get(url=url)
         return resp.text
-    except:
+    except Exception as ex:
+        print(ex)
         return ""
 
 def parse_dependencies(file_contents):
     '''
     Return pattern matches
     '''
-    PATTERN = '.Package\(url: "(.*)"'
+    PATTERN = r'url: \"(https\://\S+)\"'
     return re.findall(PATTERN, file_contents)
 
 if __name__ == "__main__":
-    with open(os.path.dirname(__file__) + '/../output/clean_found_repos.csv','r') as in_file, open(os.path.dirname(__file__) + '/../output/parsed_repos.csv','w') as out_file:
+    with open(os.path.dirname(__file__) + '/../output/found_repos.csv','r') as in_file, open(os.path.dirname(__file__) + '/../output/parsed_repos.csv','w') as out_file:
         for line in in_file:
             parts = line.rstrip("\n\r").split(',')
             print(f"Handing - {parts[1]}")
-            spd = SwiftPkgDependencies(parts[0], parts[1], parts[2], parse_dependencies(fetch_file(parts[2])))
+            spd = SwiftPkgDependencies(parts[0], parts[1], parts[3], parse_dependencies(fetch_file(parts[3])))
             out_file.write(str(spd))
-            sleep(1)

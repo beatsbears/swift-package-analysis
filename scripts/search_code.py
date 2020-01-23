@@ -2,23 +2,25 @@
 Andrew Scott - Ochrona Security
 1/3/2020
 '''
+import os
 import csv
 from time import sleep
 
 import requests
 from requests.auth import HTTPBasicAuth
 
-
+GITHUB_USER = os.environ['GITHUB_USER']
+GITHUB_API_KEY = os.environ['GITHUB_API_KEY']
 
 def get_page(page_num, base_size, range_size):
     url = "https://api.github.com/search/code"
 
-    querystring = {"q":f"package filename:package.swift size:{base_size}..{(base_size+range_size)}", 
+    querystring = {"q":f"package filename:package.swift size:{base_size}..{(base_size+999)}", 
                    "page": page_num, 
                    "per_page": 100}
     resp = requests.get(url=url, 
         params=querystring, 
-        auth=HTTPBasicAuth("user","XXXXXXXXXXXXXXXXX")
+        auth=HTTPBasicAuth(GITHUB_USER, GITHUB_API_KEY)
     )
     print(f"Query - {querystring}")
     return resp.json()
@@ -33,6 +35,7 @@ def parse_item(item):
     resp = {}
     resp["owner"] = item.get("repository", {}).get("owner", {}).get("login", "unknown")
     resp["repo"] = item.get("repository", {}).get("html_url", "unknown")
+    resp["file_link"] = item.get("html_url")
     resp["raw_link"] = create_raw_link(item.get("html_url"))
     return resp
 
@@ -47,24 +50,24 @@ def create_raw_link(url):
     '''
     if url is not None:
         parts = url.split('/')
-        return f"https://raw.githubusercontent.com/{parts[3]}/{parts[4]}/{parts[6]}/{parts[7]}"
+        return f"https://raw.githubusercontent.com/{parts[3]}/{parts[4]}/{parts[6]}/{'/'.join(parts[7:])}"
     else:
         return "NA"
 
 def write_to_file(item):
-    with open(r'found_repos.csv', 'a') as f:
+    with open(os.path.dirname(__file__) + '/../output/found_repos.csv', 'a') as f:
         writer = csv.writer(f)
         writer.writerow(item.values())
 
 if __name__ == "__main__":
     # Start file size at
-    _start_size = 100750
+    _start_size = 20001
 
     # Stop running the script once you hit this file size
-    _max_size = 200750
+    _max_size = 200000
 
     # How large of a range to search each time
-    _file_size_range = 10000
+    _file_size_range = 1000
 
     for _run_size in range(_start_size, _max_size, _file_size_range):
         _full_results = False
@@ -99,5 +102,5 @@ if __name__ == "__main__":
             except Exception as ex:
                 print(f"EXCEPTION: {ex}")
 
-            sleep(5) # avoid rate limiting
+            sleep(6) # avoid rate limiting
 

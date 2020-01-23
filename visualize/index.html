@@ -1,0 +1,127 @@
+<!--
+Andrew Scott - Ochrona Security
+1/17/2020
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <script src="js/sigma.min.js"></script>
+</head>
+<body>
+
+  <div class="container">
+    <div class="row">
+  <h2 >Swift Package Manager Dependency Graph</h2>
+    This graph was made using python to analyze public Swift repos containing package.swift files.
+    The graph format was created using networkx and visualized and cleaned up using Gephi, and finally
+    rendered here using Sigma.js.
+  <div class="sigma-parent" id="sigma-example-parent">
+    <div class="sigma-expand" id="sigma-example"></div>
+  </div>
+</div>
+
+	<script src="js/gefxParse.js"></script><script type="text/javascript">function init() {
+  // Instanciate sigma.js and customize rendering :
+  var sigInst = sigma.init(document.getElementById('sigma-example')).drawingProperties({
+    defaultLabelColor: '#fff',
+    defaultLabelSize: 10,
+    defaultLabelBGColor: '#fff',
+    defaultLabelHoverColor: '#000',
+    labelThreshold: 100,
+    defaultEdgeType: 'curve'
+  }).graphProperties({
+    minNodeSize: 1,
+    maxNodeSize: 2,
+    minEdgeSize: 0.5,
+    maxEdgeSize: 0.5
+  }).mouseProperties({
+    maxRatio: 32
+  });
+
+  // Parse a GEXF encoded file to fill the graph
+  // (requires "sigma.parseGexf.js" to be included)
+  sigInst.parseGexf('data/Swift_Packages.gexf');
+
+  //highlights the nodes that is hovered+ its edges
+  //
+  // Bind events :
+  var greyColor = '#666';
+  sigInst.bind('overnodes',function(event){
+    var nodes = event.content;
+    var neighbors = {};
+    sigInst.iterEdges(function(e){
+      if(nodes.indexOf(e.source)<0 && nodes.indexOf(e.target)<0){
+        if(!e.attr['grey']){
+          e.attr['true_color'] = e.color;
+          e.color = greyColor;
+          e.attr['grey'] = 1;
+        }
+      }else{
+        e.color = e.attr['grey'] ? e.attr['true_color'] : e.color;
+        e.attr['grey'] = 0;
+
+        neighbors[e.source] = 1;
+        neighbors[e.target] = 1;
+      }
+    }).iterNodes(function(n){
+      if(!neighbors[n.id]){
+        if(!n.attr['grey']){
+          n.attr['true_color'] = n.color;
+          n.color = greyColor;
+          n.attr['grey'] = 1;
+        }
+      }else{
+        n.color = n.attr['grey'] ? n.attr['true_color'] : n.color;
+        n.attr['grey'] = 0;
+      }
+    }).draw(2,2,2);
+  }).bind('outnodes',function(){
+    sigInst.iterEdges(function(e){
+      e.color = e.attr['grey'] ? e.attr['true_color'] : e.color;
+      e.attr['grey'] = 0;
+    }).iterNodes(function(n){
+      n.color = n.attr['grey'] ? n.attr['true_color'] : n.color;
+      n.attr['grey'] = 0;
+    }).draw(2,2,2);
+  });
+  
+  
+  // Draw the graph :
+  sigInst.draw();
+}
+
+if (document.addEventListener) {
+  document.addEventListener("DOMContentLoaded", init, false);
+} else {
+  window.onload = init;
+}
+</script>
+
+<style type="text/css">
+  /* sigma.js context : */
+  .sigma-parent {
+    position: relative;
+    border-radius: 4px;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    background: #222;
+    height: 1100px;
+  }
+  .sigma-expand {
+    position: absolute;
+    width: 100%;
+    height: 99%;
+    top: 0;
+    left: 0;
+  }
+  .buttons-container{
+    padding-bottom: 8px;
+    padding-top: 12px;
+  }
+</style>
+
+        
+		
+<?php include("../php/statcounter.php"); ?>		
+</body>
+</html>
